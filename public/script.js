@@ -185,10 +185,10 @@ function displayCocktails(cocktailsToShow) {
 
   const cocktailsHTML = cocktailsToShow
     .map((cocktail) => {
-      const isExpanded = expandedCardId === cocktail.id;
+      const isExpanded = expandedCardId === cocktail._id;
       return `
         <div class="cocktail-card${isExpanded ? " expanded" : ""}" data-id="${
-        cocktail.id
+        cocktail._id
       }">
             ${
               cocktail.theJpeg
@@ -197,9 +197,9 @@ function displayCocktails(cocktailsToShow) {
                   )}" class="cocktail-image" onerror="this.style.display='none'">`
                 : ""
             }
-            <div class="cocktail-header" onclick="toggleCardExpand(event, ${
-              cocktail.id
-            })" style="cursor:pointer;">
+            <div class="cocktail-header" onclick="toggleCardExpand(event, '${
+              cocktail._id
+            }')" style="cursor:pointer;">
                 <div>
                     <h3 class="cocktail-name">${escapeHtml(
                       cocktail.theCock
@@ -208,7 +208,7 @@ function displayCocktails(cocktailsToShow) {
                 <div class="cocktail-actions">
                     ${
                       isExpanded
-                        ? `<button class="btn btn-secondary btn-collapse" onclick="collapseCard(event, ${cocktail.id})"><i class="fas fa-times"></i></button>`
+                        ? `<button class="btn btn-secondary btn-collapse" onclick="collapseCard(event, '${cocktail._id}')"><i class="fas fa-times"></i></button>`
                         : `<button class="btn btn-primary btn-expand"><i class="fas fa-plus"></i></button>`
                     }
                 </div>
@@ -232,12 +232,12 @@ function displayCocktails(cocktailsToShow) {
                     : ""
                 }
                 <div class="cocktail-edit-delete">
-                    <button class="btn btn-edit" onclick="editCocktail(${
-                      cocktail.id
-                    });event.stopPropagation();"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-delete" onclick="deleteCocktail(${
-                      cocktail.id
-                    }, '${escapeHtml(
+                    <button class="btn btn-edit" onclick="editCocktail('${
+                      cocktail._id
+                    }');event.stopPropagation();"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-delete" onclick="deleteCocktail('${
+                      cocktail._id
+                    }', '${escapeHtml(
         cocktail.theCock
       )}');event.stopPropagation();"><i class="fas fa-trash"></i> Delete</button>
                 </div>
@@ -381,7 +381,7 @@ async function updateCocktail(id, cocktailData) {
 
 // Edit cocktail
 function editCocktail(id) {
-  const cocktail = cocktails.find((c) => c.id === id);
+  const cocktail = cocktails.find((c) => c._id === id);
   if (!cocktail) return;
 
   editingId = id;
@@ -389,7 +389,7 @@ function editCocktail(id) {
   cancelBtn.style.display = "inline-flex";
 
   // Populate form
-  document.getElementById("cocktail-id").value = cocktail.id;
+  document.getElementById("cocktail-id").value = cocktail._id;
   document.getElementById("theCock").value = cocktail.theCock;
   document.getElementById("theIngredients").value = cocktail.theIngredients;
   document.getElementById("theRecipe").value = cocktail.theRecipe;

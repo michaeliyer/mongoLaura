@@ -4,6 +4,8 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const mongoose = require("mongoose");
+const { Types } = require("mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +53,25 @@ const upload = multer({
   },
   limits: { fileSize: 5 * 1024 * 1024 },
 });
+
+// Mongoose (MongoDB) setup
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/mongoLaura";
+mongoose
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB via Mongoose."))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+const cocktailSchema = new mongoose.Schema({
+  theCock: { type: String, required: true },
+  theIngredients: { type: String, required: true },
+  theRecipe: { type: String, required: true },
+  theJpeg: { type: String },
+  theComment: { type: String },
+  created_at: { type: Date, default: Date.now },
+});
+
+const Cocktail = mongoose.model("Cocktail", cocktailSchema);
 
 // Initialize database with table
 function initDatabase() {
@@ -133,117 +154,172 @@ function importInitialData() {
 // API Routes
 
 // Get all cocktails
-app.get("/api/cocktails", (req, res) => {
-  const query = "SELECT * FROM cocktails ORDER BY created_at DESC";
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
+app.get("/api/cocktails", async (req, res) => {
+  try {
+    const cocktails = await Cocktail.find().sort({ created_at: -1 });
+    res.json(cocktails);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+  // SQLite version (now replaced by MongoDB):
+  // const query = "SELECT * FROM cocktails ORDER BY created_at DESC";
+  // db.all(query, [], (err, rows) => {
+  //   if (err) {
+  //     res.status(500).json({ error: err.message });
+  //     return;
+  //   }
+  //   res.json(rows);
+  // });
 });
 
 // Get single cocktail by ID
-app.get("/api/cocktails/:id", (req, res) => {
-  const query = "SELECT * FROM cocktails WHERE id = ?";
-  db.get(query, [req.params.id], (err, row) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+app.get("/api/cocktails/:id", async (req, res) => {
+  try {
+    const cocktail = await Cocktail.findById(req.params.id);
+    if (!cocktail) {
+      return res.status(404).json({ error: "Cocktail not found" });
     }
-    if (!row) {
-      res.status(404).json({ error: "Cocktail not found" });
-      return;
-    }
-    res.json(row);
-  });
+    res.json(cocktail);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+  // SQLite version (now replaced by MongoDB):
+  // const query = "SELECT * FROM cocktails WHERE id = ?";
+  // db.get(query, [req.params.id], (err, row) => {
+  //   if (err) {
+  //     res.status(500).json({ error: err.message });
+  //     return;
+  //   }
+  //   if (!row) {
+  //     res.status(404).json({ error: "Cocktail not found" });
+  //     return;
+  //   }
+  //   res.json(row);
+  // });
 });
 
 // Create new cocktail
-app.post("/api/cocktails", (req, res) => {
+app.post("/api/cocktails", async (req, res) => {
   const { theCock, theIngredients, theRecipe, theJpeg, theComment } = req.body;
 
   if (!theCock || !theIngredients || !theRecipe) {
-    res
+    return res
       .status(400)
       .json({ error: "Cocktail name, ingredients, and recipe are required" });
-    return;
   }
 
-  const query = `
-    INSERT INTO cocktails (theCock, theIngredients, theRecipe, theJpeg, theComment)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-  db.run(
-    query,
-    [theCock, theIngredients, theRecipe, theJpeg, theComment],
-    function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({
-        id: this.lastID,
-        theCock,
-        theIngredients,
-        theRecipe,
-        theJpeg,
-        theComment,
-      });
-    }
-  );
+  try {
+    const newCocktail = new Cocktail({
+      theCock,
+      theIngredients,
+      theRecipe,
+      theJpeg,
+      theComment,
+    });
+    const savedCocktail = await newCocktail.save();
+    res.json(savedCocktail);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+  // SQLite version (now replaced by MongoDB):
+  // const query = `
+  //   INSERT INTO cocktails (theCock, theIngredients, theRecipe, theJpeg, theComment)
+  //   VALUES (?, ?, ?, ?, ?)
+  // `;
+  // db.run(
+  //   query,
+  //   [theCock, theIngredients, theRecipe, theJpeg, theComment],
+  //   function (err) {
+  //     if (err) {
+  //       res.status(500).json({ error: err.message });
+  //       return;
+  //     }
+  //     res.json({
+  //       id: this.lastID,
+  //       theCock,
+  //       theIngredients,
+  //       theRecipe,
+  //       theJpeg,
+  //       theComment,
+  //     });
+  //   }
+  // );
 });
 
 // Update cocktail
-app.put("/api/cocktails/:id", (req, res) => {
+app.put("/api/cocktails/:id", async (req, res) => {
   const { theCock, theIngredients, theRecipe, theJpeg, theComment } = req.body;
 
   if (!theCock || !theIngredients || !theRecipe) {
-    res
+    return res
       .status(400)
       .json({ error: "Cocktail name, ingredients, and recipe are required" });
-    return;
   }
 
-  const query = `
-    UPDATE cocktails 
-    SET theCock = ?, theIngredients = ?, theRecipe = ?, theJpeg = ?, theComment = ?
-    WHERE id = ?
-  `;
-
-  db.run(
-    query,
-    [theCock, theIngredients, theRecipe, theJpeg, theComment, req.params.id],
-    function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      if (this.changes === 0) {
-        res.status(404).json({ error: "Cocktail not found" });
-        return;
-      }
-      res.json({ message: "Cocktail updated successfully" });
+  try {
+    const id = Types.ObjectId.isValid(req.params.id)
+      ? new Types.ObjectId(req.params.id)
+      : req.params.id;
+    const updated = await Cocktail.findOneAndUpdate(
+      { _id: id },
+      { theCock, theIngredients, theRecipe, theJpeg, theComment },
+      { new: true, runValidators: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ error: "Cocktail not found" });
     }
-  );
+    res.json({ message: "Cocktail updated successfully" });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: err.message });
+  }
+  // SQLite version (now replaced by MongoDB):
+  // const query = `
+  //   UPDATE cocktails
+  //   SET theCock = ?, theIngredients = ?, theRecipe = ?, theJpeg = ?, theComment = ?
+  //   WHERE id = ?
+  // `;
+  // db.run(
+  //   query,
+  //   [theCock, theIngredients, theRecipe, theJpeg, theComment, req.params.id],
+  //   function (err) {
+  //     if (err) {
+  //       res.status(500).json({ error: err.message });
+  //       return;
+  //     }
+  //     if (this.changes === 0) {
+  //       res.status(404).json({ error: "Cocktail not found" });
+  //       return;
+  //     }
+  //     res.json({ message: "Cocktail updated successfully" });
+  //   }
+  // );
 });
 
 // Delete cocktail
-app.delete("/api/cocktails/:id", (req, res) => {
-  const query = "DELETE FROM cocktails WHERE id = ?";
-  db.run(query, [req.params.id], function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    if (this.changes === 0) {
-      res.status(404).json({ error: "Cocktail not found" });
-      return;
+app.delete("/api/cocktails/:id", async (req, res) => {
+  try {
+    const deleted = await Cocktail.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: "Cocktail not found" });
     }
     res.json({ message: "Cocktail deleted successfully" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+  // SQLite version (now replaced by MongoDB):
+  // const query = "DELETE FROM cocktails WHERE id = ?";
+  // db.run(query, [req.params.id], function (err) {
+  //   if (err) {
+  //     res.status(500).json({ error: err.message });
+  //     return;
+  //   }
+  //   if (this.changes === 0) {
+  //     res.status(404).json({ error: "Cocktail not found" });
+  //     return;
+  //   }
+  //   res.json({ message: "Cocktail deleted successfully" });
+  // });
 });
 
 // Image upload endpoint
