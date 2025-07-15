@@ -1,20 +1,20 @@
 # Cocktail Database Application
 
-A modern web application for managing cocktail recipes with SQLite3 database backend and a beautiful, responsive frontend.
+A modern web application for managing cocktail recipes with a MongoDB database backend and a beautiful, responsive frontend.
 
 ## Features
 
 - **CRUD Operations**: Create, Read, Update, and Delete cocktail recipes
 - **Search Functionality**: Search cocktails by name, ingredients, recipe, or comments
 - **Modern UI**: Beautiful, responsive design with smooth animations
-- **SQLite3 Database**: Persistent data storage with automatic initialization
+- **MongoDB Database**: Persistent data storage with automatic initialization
 - **RESTful API**: Clean API endpoints for all operations
 - **Form Validation**: Client-side and server-side validation
 - **Real-time Updates**: Instant UI updates after operations
 
 ## Tech Stack
 
-- **Backend**: Node.js, Express.js, SQLite3
+- **Backend**: Node.js, Express.js, MongoDB, Mongoose
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Styling**: Custom CSS with responsive design
 - **Icons**: Font Awesome
@@ -30,16 +30,18 @@ A modern web application for managing cocktail recipes with SQLite3 database bac
    npm install
    ```
 
-3. **Start the application**:
+3. **Start MongoDB** (if not already running):
+
+   ```bash
+   mongod
+   ```
+
+   (or use MongoDB Atlas and set your `MONGO_URI` environment variable)
+
+4. **Start the application**:
 
    ```bash
    npm start
-   ```
-
-4. **For development with auto-restart**:
-
-   ```bash
-   npm run dev
    ```
 
 5. **Open your browser** and navigate to:
@@ -47,20 +49,19 @@ A modern web application for managing cocktail recipes with SQLite3 database bac
    http://localhost:3000
    ```
 
-## Database Schema
+## Database Schema (Mongoose)
 
-The application automatically creates a SQLite3 database (`cocktails.db`) with the following schema:
+The application uses a MongoDB collection `cocktails` with the following schema:
 
-```sql
-CREATE TABLE cocktails (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  theCock TEXT NOT NULL,
-  theIngredients TEXT NOT NULL,
-  theRecipe TEXT NOT NULL,
-  theJpeg TEXT,
-  theComment TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+```js
+{
+  theCock:      { type: String, required: true },
+  theIngredients: { type: String, required: true },
+  theRecipe:    { type: String, required: true },
+  theJpeg:      { type: String },
+  theComment:   { type: String },
+  created_at:   { type: Date, default: Date.now }
+}
 ```
 
 ## API Endpoints
@@ -70,6 +71,7 @@ CREATE TABLE cocktails (
 - `POST /api/cocktails` - Create a new cocktail
 - `PUT /api/cocktails/:id` - Update an existing cocktail
 - `DELETE /api/cocktails/:id` - Delete a cocktail
+- `POST /api/upload` - Upload an image (returns file path)
 
 ## Usage
 
@@ -101,16 +103,15 @@ CREATE TABLE cocktails (
 ## File Structure
 
 ```
-sqLaura/
-├── server.js              # Main server file with Express and SQLite3
+mongoLaura/
+├── server.js              # Main server file with Express and MongoDB/Mongoose
 ├── package.json           # Node.js dependencies and scripts
-├── allCocktails.js       # Original cocktail data (imported automatically)
-├── cocktails.db          # SQLite3 database (created automatically)
-├── public/               # Frontend files
-│   ├── index.html        # Main HTML page
-│   ├── style.css         # CSS styling
-│   └── script.js         # Frontend JavaScript
-└── README.md            # This file
+├── allCocktails.js        # Original cocktail data (imported automatically)
+├── public/                # Frontend files
+│   ├── index.html         # Main HTML page
+│   ├── style.css          # CSS styling
+│   └── script.js          # Frontend JavaScript
+└── README.md              # This file
 ```
 
 ## Initial Data
@@ -132,16 +133,16 @@ The application automatically imports the initial cocktails from `allCocktails.j
 
 To modify the database schema:
 
-1. Update the `CREATE TABLE` statement in `server.js`
-2. Delete the existing `cocktails.db` file
-3. Restart the application to recreate the database
+1. Update the Mongoose schema in `server.js`
+2. Remove or update existing documents as needed
+3. Restart the application
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Port already in use**: Change the port in `server.js` (line 9)
-2. **Database errors**: Delete `cocktails.db` and restart
+1. **Port already in use**: Stop the process using port 3000 or change the port in `server.js`
+2. **MongoDB connection errors**: Make sure MongoDB is running locally or update your `MONGO_URI` for Atlas/cloud
 3. **CORS issues**: The server includes CORS middleware for cross-origin requests
 
 ### Logs

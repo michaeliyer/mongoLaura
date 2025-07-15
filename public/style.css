@@ -10,7 +10,7 @@ body {
     sans-serif;
   line-height: 1.6;
   color: #333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #de551a 0%, #e57b1e 100%);
   min-height: 100vh;
 }
 
@@ -186,8 +186,11 @@ body {
 .list-section {
   margin: 0 auto;
   margin-top: 24px;
-  background: linear-gradient(135deg, #7072e1 0%, #764ba2 100%);
-  /* background: rgb(90, 88, 178); */
+  background: linear-gradient(
+    135deg,
+    #de551a 0%,
+    #e57b1e 100%
+  ); /* background: rgb(90, 88, 178); */
   border-radius: 16px;
   padding: 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -251,7 +254,7 @@ body {
   width: 100%;
 }
 .cocktail-card {
-  background: #fff;
+  background: linear-gradient(135deg, #eb8459 0%, #eea564 100%);
   border-radius: 14px;
   padding: 18px 18px 12px 18px;
   border: 1.5px solid #e1e5e9;
@@ -345,6 +348,10 @@ body {
   font-weight: 600;
   color: #333;
   margin-bottom: 5px;
+}
+
+.cocktail-header .cocktail-name {
+  margin-right: 1rem;
 }
 
 .cocktail-actions {
