@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cocktail Database</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1><i class="fas fa-cocktail"></i> Cocktail Database</h1>
+        <p>Manage your favorite cocktail recipes</p>
+      </header>
+
+      <main class="main-content">
+        <!-- Add/Edit Form Section -->
+        <section class="form-section" id="form-section" style="display: none">
+          <div class="form-container">
+            <div class="form-header">
+              <h2 id="form-title">Add New Cocktail</h2>
+              <button
+                type="button"
+                id="close-form-btn"
+                class="btn btn-secondary btn-close-form"
+                title="Close"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <form id="cocktail-form" class="cocktail-form">
+              <input type="hidden" id="cocktail-id" name="id" />
+
+              <div class="form-group">
+                <label for="theCock">Cocktail Name *</label>
+                <input type="text" id="theCock" name="theCock" required />
+              </div>
+
+              <div class="form-group">
+                <label for="theIngredients">Ingredients *</label>
+                <textarea
+                  id="theIngredients"
+                  name="theIngredients"
+                  rows="3"
+                  required
+                  placeholder="e.g., Vodka, Lime juice, Simple syrup"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="theRecipe">Recipe Instructions *</label>
+                <textarea
+                  id="theRecipe"
+                  name="theRecipe"
+                  rows="4"
+                  required
+                  placeholder="Step-by-step instructions for making the cocktail"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="theJpeg">Image URL (optional)</label>
+                <input
+                  type="url"
+                  id="theJpeg"
+                  name="theJpeg"
+                  placeholder="https://example.com/cocktail-image.jpg"
+                />
+              </div>
+              <div class="form-group">
+                <label for="theJpegFile"
+                  >Or upload an image (JPG/PNG, max 5MB)</label
+                >
+                <input
+                  type="file"
+                  id="theJpegFile"
+                  name="theJpegFile"
+                  accept="image/jpeg,image/png"
+                />
+                <div id="image-upload-preview" style="margin-top: 8px"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="theComment">Comments (optional)</label>
+                <textarea
+                  id="theComment"
+                  name="theComment"
+                  rows="2"
+                  placeholder="Personal notes or tips about this cocktail"
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Cocktail
+                </button>
+                <button
+                  type="button"
+                  id="cancel-btn"
+                  class="btn btn-secondary"
+                  style="display: none"
+                >
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+        <!-- Floating Add Button -->
+        <button
+          id="show-form-btn"
+          class="floating-add-btn"
+          title="Add New Cocktail"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+
+        <!-- Cocktails List Section -->
+        <section class="list-section">
+          <div class="list-header">
+            <h2>Your Cocktails</h2>
+            <div class="search-container">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Search cocktails..."
+              />
+              <i class="fas fa-search search-icon"></i>
+            </div>
+            <div id="view-changer" class="view-changer" title="Change view">
+              <button class="view-btn" id="view-grid" aria-label="Grid">
+                <i class="fas fa-th-large"></i>
+              </button>
+              <button class="view-btn" id="view-masonry" aria-label="Masonry">
+                <i class="fas fa-grip-vertical"></i>
+              </button>
+              <button class="view-btn" id="view-oblique" aria-label="Oblique">
+                <i class="fas fa-slash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="cocktails-list" class="cocktails-grid">
+            <!-- Cocktails will be loaded here -->
+          </div>
+
+          <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Loading cocktails...
+          </div>
+
+          <div id="no-cocktails" class="no-cocktails" style="display: none">
+            <i class="fas fa-glass-martini"></i>
+            <h3>No cocktails yet</h3>
+            <p>Add your first cocktail using the form above!</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal for confirmation -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>
+          Are you sure you want to delete "<span
+            id="delete-cocktail-name"
+          ></span
+          >"?
+        </p>
+        <div class="modal-actions">
+          <button id="confirm-delete" class="btn btn-danger">Delete</button>
+          <button id="cancel-delete" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for expanded cocktail image -->
+    <div id="image-modal" class="image-modal">
+      <span id="image-modal-close" class="image-modal-close">&times;</span>
+      <img
+        id="image-modal-img"
+        class="image-modal-content"
+        src=""
+        alt="Expanded cocktail image"
+      />
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
