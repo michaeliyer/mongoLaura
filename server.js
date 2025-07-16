@@ -301,27 +301,28 @@ app.put("/api/cocktails/:id", async (req, res) => {
 // Delete cocktail
 app.delete("/api/cocktails/:id", async (req, res) => {
   try {
-    const deleted = await Cocktail.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    let deleted = null;
+    if (Types.ObjectId.isValid(id)) {
+      deleted = await Cocktail.findByIdAndDelete(id);
+    }
+    // If not found, try as string _id (for legacy/incorrectly inserted data)
     if (!deleted) {
-      return res.status(404).json({ error: "Cocktail not found" });
+      deleted = await Cocktail.findOneAndDelete({ _id: id });
+    }
+    // Fallback: try to delete by name (legacy/SQLite data)
+    if (!deleted) {
+      deleted = await Cocktail.findOneAndDelete({ theCock: id });
+    }
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ error: "Cocktail not found or invalid ID" });
     }
     res.json({ message: "Cocktail deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-  // SQLite version (now replaced by MongoDB):
-  // const query = "DELETE FROM cocktails WHERE id = ?";
-  // db.run(query, [req.params.id], function (err) {
-  //   if (err) {
-  //     res.status(500).json({ error: err.message });
-  //     return;
-  //   }
-  //   if (this.changes === 0) {
-  //     res.status(404).json({ error: "Cocktail not found" });
-  //     return;
-  //   }
-  //   res.json({ message: "Cocktail deleted successfully" });
-  // });
 });
 
 // Image upload endpoint

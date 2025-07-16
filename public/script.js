@@ -118,6 +118,34 @@ function setupEventListeners() {
     }
   });
 
+  // Image type radio buttons
+  const imageTypeUrl = document.getElementById("imageTypeUrl");
+  const imageTypeUpload = document.getElementById("imageTypeUpload");
+  const urlInputGroup = document.getElementById("urlInputGroup");
+  const uploadInputGroup = document.getElementById("uploadInputGroup");
+
+  if (imageTypeUrl && imageTypeUpload) {
+    imageTypeUrl.addEventListener("change", function () {
+      if (this.checked) {
+        urlInputGroup.style.display = "flex";
+        uploadInputGroup.style.display = "none";
+        // Clear upload-related data
+        uploadedImagePath = null;
+        imagePreview.innerHTML = "";
+        if (fileInput) fileInput.value = "";
+      }
+    });
+
+    imageTypeUpload.addEventListener("change", function () {
+      if (this.checked) {
+        urlInputGroup.style.display = "none";
+        uploadInputGroup.style.display = "flex";
+        // Clear URL input
+        if (imageUrlInput) imageUrlInput.value = "";
+      }
+    });
+  }
+
   // Floating add button
   document
     .getElementById("show-form-btn")
@@ -314,7 +342,20 @@ async function handleFormSubmit(e) {
   e.preventDefault();
 
   const formData = new FormData(cocktailForm);
-  let theJpegValue = uploadedImagePath || formData.get("theJpeg") || null;
+  const imageTypeUrl = document.getElementById("imageTypeUrl");
+  const imageTypeUpload = document.getElementById("imageTypeUpload");
+
+  let theJpegValue = null;
+
+  // Determine which image type is selected and get the appropriate value
+  if (imageTypeUrl && imageTypeUrl.checked) {
+    // Use URL input
+    theJpegValue = formData.get("theJpeg") || null;
+  } else if (imageTypeUpload && imageTypeUpload.checked) {
+    // Use uploaded file path
+    theJpegValue = uploadedImagePath || null;
+  }
+
   const cocktailData = {
     theCock: formData.get("theCock"),
     theIngredients: formData.get("theIngredients"),
@@ -393,8 +434,46 @@ function editCocktail(id) {
   document.getElementById("theCock").value = cocktail.theCock;
   document.getElementById("theIngredients").value = cocktail.theIngredients;
   document.getElementById("theRecipe").value = cocktail.theRecipe;
-  document.getElementById("theJpeg").value = cocktail.theJpeg || "";
   document.getElementById("theComment").value = cocktail.theComment || "";
+
+  // Handle image type and value
+  const imageTypeUrl = document.getElementById("imageTypeUrl");
+  const imageTypeUpload = document.getElementById("imageTypeUpload");
+  const urlInputGroup = document.getElementById("urlInputGroup");
+  const uploadInputGroup = document.getElementById("uploadInputGroup");
+
+  if (cocktail.theJpeg) {
+    // Check if it's a local upload (starts with /uploads/) or external URL
+    if (cocktail.theJpeg.startsWith("/uploads/")) {
+      // It's a local upload
+      imageTypeUpload.checked = true;
+      imageTypeUrl.checked = false;
+      urlInputGroup.style.display = "none";
+      uploadInputGroup.style.display = "flex";
+      // Set the uploaded image path for preview
+      uploadedImagePath = cocktail.theJpeg;
+      imagePreview.innerHTML = `<img src="${cocktail.theJpeg}" alt="Preview" style="max-width:120px;max-height:80px;border-radius:8px;box-shadow:0 2px 8px #ccc;">`;
+    } else {
+      // It's an external URL
+      imageTypeUrl.checked = true;
+      imageTypeUpload.checked = false;
+      urlInputGroup.style.display = "flex";
+      uploadInputGroup.style.display = "none";
+      document.getElementById("theJpeg").value = cocktail.theJpeg;
+      // Clear upload-related data
+      uploadedImagePath = null;
+      imagePreview.innerHTML = "";
+    }
+  } else {
+    // No image, default to URL option
+    imageTypeUrl.checked = true;
+    imageTypeUpload.checked = false;
+    urlInputGroup.style.display = "flex";
+    uploadInputGroup.style.display = "none";
+    document.getElementById("theJpeg").value = "";
+    uploadedImagePath = null;
+    imagePreview.innerHTML = "";
+  }
 
   // Show the form section (modal)
   const formSection = document.getElementById("form-section");
@@ -419,6 +498,26 @@ function resetForm() {
   formTitle.textContent = "Add New Cocktail";
   cancelBtn.style.display = "none";
   document.getElementById("cocktail-id").value = "";
+
+  // Reset image-related fields
+  const imageTypeUrl = document.getElementById("imageTypeUrl");
+  const imageTypeUpload = document.getElementById("imageTypeUpload");
+  const urlInputGroup = document.getElementById("urlInputGroup");
+  const uploadInputGroup = document.getElementById("uploadInputGroup");
+
+  if (imageTypeUrl && imageTypeUpload) {
+    // Default to URL option
+    imageTypeUrl.checked = true;
+    imageTypeUpload.checked = false;
+    urlInputGroup.style.display = "flex";
+    uploadInputGroup.style.display = "none";
+  }
+
+  // Clear image preview and uploaded path
+  uploadedImagePath = null;
+  if (imagePreview) {
+    imagePreview.innerHTML = "";
+  }
 }
 
 // Delete cocktail

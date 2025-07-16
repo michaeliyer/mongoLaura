@@ -67,7 +67,32 @@
               </div>
 
               <div class="form-group">
-                <label for="theJpeg">Image URL (optional)</label>
+                <label>Image Options</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="url"
+                      id="imageTypeUrl"
+                      checked
+                    />
+                    <span class="radio-label">Use Image URL</span>
+                  </label>
+                  <label class="radio-option">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="upload"
+                      id="imageTypeUpload"
+                    />
+                    <span class="radio-label">Upload Image File</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group" id="urlInputGroup">
+                <label for="theJpeg">Image URL</label>
                 <input
                   type="url"
                   id="theJpeg"
@@ -75,10 +100,13 @@
                   placeholder="https://example.com/cocktail-image.jpg"
                 />
               </div>
-              <div class="form-group">
-                <label for="theJpegFile"
-                  >Or upload an image (JPG/PNG, max 5MB)</label
-                >
+
+              <div
+                class="form-group"
+                id="uploadInputGroup"
+                style="display: none"
+              >
+                <label for="theJpegFile">Upload Image (JPG/PNG, max 5MB)</label>
                 <input
                   type="file"
                   id="theJpegFile"
