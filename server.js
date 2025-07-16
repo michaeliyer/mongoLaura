@@ -328,10 +328,52 @@ app.delete("/api/cocktails/:id", async (req, res) => {
 // Image upload endpoint
 app.post("/api/upload", upload.single("image"), (req, res) => {
   if (!req.file) {
+    console.error("Upload failed: No file received");
     return res.status(400).json({ error: "No file uploaded" });
   }
-  const filePath = "/uploads/" + req.file.filename;
-  res.json({ filePath });
+
+  try {
+    const filePath = "/uploads/" + req.file.filename;
+    console.log(
+      `File uploaded successfully: ${req.file.originalname} -> ${req.file.filename} (${req.file.size} bytes)`
+    );
+    res.json({ filePath });
+  } catch (error) {
+    console.error("Upload processing error:", error);
+    res.status(500).json({ error: "Failed to process uploaded file" });
+  }
+});
+
+// Error handling for multer
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    console.error("Multer error:", error);
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ error: "File too large. Maximum size is 5MB." });
+    }
+    if (error.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json({ error: "Too many files uploaded." });
+    }
+    return res
+      .status(400)
+      .json({ error: "File upload error: " + error.message });
+  }
+
+  if (error.message === "Only JPEG and PNG images are allowed") {
+    console.error(
+      "File type rejected:",
+      req.file?.originalname,
+      req.file?.mimetype
+    );
+    return res
+      .status(400)
+      .json({ error: "Only JPEG and PNG images are allowed" });
+  }
+
+  console.error("Upload error:", error);
+  res.status(500).json({ error: "Upload failed" });
 });
 
 // Serve the main page

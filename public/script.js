@@ -306,33 +306,69 @@ if (fileInput) {
   fileInput.addEventListener("change", async function (e) {
     const file = fileInput.files[0];
     if (!file) return;
+
+    // Clear previous state
     imagePreview.innerHTML = "";
     uploadedImagePath = null;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      imagePreview.innerHTML = `<div style='color:red;'>Invalid file type. Only JPEG and PNG images are allowed.</div>`;
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      imagePreview.innerHTML = `<div style='color:red;'>File too large. Maximum size is 5MB.</div>`;
+      return;
+    }
+
     // Show preview
     const reader = new FileReader();
     reader.onload = function (ev) {
       imagePreview.innerHTML = `<img src="${ev.target.result}" alt="Preview" style="max-width:120px;max-height:80px;border-radius:8px;box-shadow:0 2px 8px #ccc;">`;
     };
     reader.readAsDataURL(file);
+
+    // Show loading indicator
+    imagePreview.innerHTML += `<div style='color:blue;margin-top:8px;'><i class="fas fa-spinner fa-spin"></i> Uploading...</div>`;
+
     // Upload file
     const formData = new FormData();
     formData.append("image", file);
+
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
+
       const data = await res.json();
+
       if (res.ok && data.filePath) {
         uploadedImagePath = data.filePath;
-        // Optionally show a checkmark or success message
+        // Replace loading with success indicator
+        const loadingDiv = imagePreview.querySelector("div");
+        if (loadingDiv) {
+          loadingDiv.innerHTML = `<i class="fas fa-check" style="color:green;"></i> Upload successful!`;
+          loadingDiv.style.color = "green";
+        }
       } else {
-        imagePreview.innerHTML += `<div style='color:red;'>Upload failed: ${
+        // Remove preview and show error
+        const img = imagePreview.querySelector("img");
+        if (img) img.remove();
+        imagePreview.innerHTML = `<div style='color:red;'>Upload failed: ${
           data.error || "Unknown error"
         }</div>`;
       }
     } catch (err) {
-      imagePreview.innerHTML += `<div style='color:red;'>Upload failed</div>`;
+      console.error("Upload error:", err);
+      // Remove preview and show error
+      const img = imagePreview.querySelector("img");
+      if (img) img.remove();
+      imagePreview.innerHTML = `<div style='color:red;'>Upload failed: Network error</div>`;
     }
   });
 }
