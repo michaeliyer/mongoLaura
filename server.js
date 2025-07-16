@@ -6,6 +6,8 @@ const fs = require("fs");
 const multer = require("multer");
 const mongoose = require("mongoose");
 const { Types } = require("mongoose");
+const sharp = require("sharp");
+const heicConvert = require("heic-convert");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -51,7 +53,7 @@ const upload = multer({
       cb(new Error("Only JPEG and PNG images are allowed"));
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 12 * 1024 * 1024 },
 });
 
 // Mongoose (MongoDB) setup
@@ -326,18 +328,47 @@ app.delete("/api/cocktails/:id", async (req, res) => {
 });
 
 // Image upload endpoint
-app.post("/api/upload", upload.single("image"), (req, res) => {
+app.post("/api/upload", upload.single("image"), async (req, res) => {
   if (!req.file) {
     console.error("Upload failed: No file received");
     return res.status(400).json({ error: "No file uploaded" });
   }
 
   try {
-    const filePath = "/uploads/" + req.file.filename;
-    console.log(
-      `File uploaded successfully: ${req.file.originalname} -> ${req.file.filename} (${req.file.size} bytes)`
-    );
-    res.json({ filePath });
+    let filePath = "/uploads/" + req.file.filename;
+    let finalPath = filePath;
+    let converted = false;
+
+    // If HEIC/HEIF, convert to JPEG
+    if (
+      req.file.mimetype === "image/heic" ||
+      req.file.mimetype === "image/heif"
+    ) {
+      const inputBuffer = fs.readFileSync(req.file.path);
+      const outputBuffer = await heicConvert({
+        buffer: inputBuffer,
+        format: "JPEG",
+        quality: 1,
+      });
+      // Save as JPEG
+      const jpegFilename = req.file.filename.replace(/\.(heic|heif)$/i, ".jpg");
+      const jpegPath = path.join(uploadsDir, jpegFilename);
+      fs.writeFileSync(jpegPath, outputBuffer);
+      // Remove original HEIC/HEIF file
+      fs.unlinkSync(req.file.path);
+      finalPath = "/uploads/" + jpegFilename;
+      converted = true;
+      console.log(
+        `Converted HEIC/HEIF to JPEG: ${req.file.filename} -> ${jpegFilename}`
+      );
+    }
+
+    if (!converted) {
+      console.log(
+        `File uploaded successfully: ${req.file.originalname} -> ${req.file.filename} (${req.file.size} bytes)`
+      );
+    }
+    res.json({ filePath: finalPath });
   } catch (error) {
     console.error("Upload processing error:", error);
     res.status(500).json({ error: "Failed to process uploaded file" });

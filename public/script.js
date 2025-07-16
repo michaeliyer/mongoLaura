@@ -318,8 +318,8 @@ if (fileInput) {
       return;
     }
 
-    // Validate file size (5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (12MB)
+    const maxSize = 12 * 1024 * 1024; // 12MB
     if (file.size > maxSize) {
       imagePreview.innerHTML = `<div style='color:red;'>File too large. Maximum size is 5MB.</div>`;
       return;
